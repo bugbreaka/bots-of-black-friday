@@ -23,7 +23,18 @@ const textureOptions = {
   scaleMode: SCALE_MODES.NEAREST
 }
 
-export const textures = {
+export const textures: Readonly<{
+  wall: Texture
+  floor: Texture
+  mine: Texture
+  exit: Texture
+  potion: Texture
+  weaponAxe: Texture
+  weaponWand: Texture
+  label: Texture
+  energyBall: Texture
+  beer: Texture
+}> = {
   wall: Texture.from(wallImage, textureOptions),
   floor: Texture.from(floorImage, textureOptions),
   mine: Texture.from(mineImage, textureOptions),
