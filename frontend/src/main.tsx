@@ -1,4 +1,5 @@
 import React from 'react'
+import { Stage } from '@pixi/react'
 import ReactDOM from 'react-dom/client'
 import { useResizeDetector } from 'react-resize-detector'
 import { Client, type IFrame, type Message } from '@stomp/stompjs'
@@ -11,7 +12,9 @@ import { calculateMapDimensions } from '@src/utils/MapDimensions'
 import Chat from '@src/components/Chat'
 import Scoreboard from '@src/components/Scoreboard'
 import { Toggle } from '@src/components/Toggle'
-import Map from '@src/Map'
+import { MapGrid } from '@src/components/MapGrid'
+import { MapStaticContent } from '@src/components/MapStaticContent'
+import { MapDynamicContent } from '@src/components/MapDynamicContent'
 import beerImage from '@src/assets/beer.png'
 import '@src/index.css'
 
@@ -51,14 +54,22 @@ function MapContainer ({
     {!gameState.ok && <ErrorMessage
       message={`Game state error: ${JSON.stringify(gameState.error, null, '  ')}`}
     />}
-    {dimensions !== undefined && gameMap.ok && gameState.ok && <Map
-      gameMap={gameMap.value}
-      gameState={gameState.value}
-      dimensions={dimensions}
-      showBeer={showBeer}
-      showMapGrid={showMapGrid}
-      showItemLabels={showItemLabels}
-    />}
+    {dimensions !== undefined && gameMap.ok && gameState.ok &&
+      <Stage
+        className="mx-auto"
+        width={dimensions.stageWidth}
+        height={dimensions.stageHeight}
+        options={{ antialias: false, backgroundColor: 0xeef1f5 }}
+      >
+        <MapStaticContent gameMap={gameMap.value} dimensions={dimensions} />
+        {showMapGrid && <MapGrid dimensions={dimensions} />}
+        <MapDynamicContent
+          gameState={gameState.value}
+          dimensions={dimensions}
+          showBeer={showBeer}
+          showItemLabels={showItemLabels}
+        />
+      </Stage>}
   </div>
 }
 

@@ -2,6 +2,8 @@ import { type Result } from '@src/utils/Result'
 import { type GameMap } from '@src/types/GameMap'
 
 export interface MapDimensions {
+  width: number
+  height: number
   containerWidth: number
   tileWidth: number
   halfTileWidth: number
@@ -24,6 +26,8 @@ export function calculateMapDimensions (
   const tileWidth = Math.floor(containerWidth / gameMap.value.width)
 
   return {
+    width: gameMap.value.width,
+    height: gameMap.value.height,
     containerWidth,
     tileWidth,
     halfTileWidth: Math.round(tileWidth / 2),
