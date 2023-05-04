@@ -55,11 +55,6 @@ type MapItem = Item & {
 
 type MapItemWithLabel = MapItem & { labelText: string }
 
-function getWeaponTexture (x: number, y: number): Texture {
-  const sum = Math.abs(x + y)
-  return sum % 2 === 0 ? textures.weaponWand : textures.weaponAxe
-}
-
 function Label ({
   text,
   halfTileWidth,
@@ -152,7 +147,7 @@ export function MapDynamicContent ({
     if (type === 'JUST_SOME_JUNK') {
       texture = getJunkTexture(position.x, position.y)
     } else if (type === 'WEAPON') {
-      texture = getWeaponTexture(position.x, position.y)
+      texture = textures.weapon
     } else if (type === 'POTION') {
       texture = showBeer ? textures.beer : textures.potion
     } else {

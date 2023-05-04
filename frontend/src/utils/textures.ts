@@ -8,8 +8,7 @@ import junkOneImage from '@src/assets/junk-001.png'
 import junkTwoImage from '@src/assets/junk-002.png'
 import junkThreeImage from '@src/assets/junk-003.png'
 import potionImage from '@src/assets/potion.png'
-import weaponAxeImage from '@src/assets/weapon-axe.png'
-import weaponWandImage from '@src/assets/weapon-wand.png'
+import weaponImage from '@src/assets/weapon.png'
 import labelImage from '@src/assets/label.png'
 import playerOneImage from '@src/assets/player-001.png'
 import playerTwoImage from '@src/assets/player-002.png'
@@ -29,8 +28,7 @@ export const textures: Readonly<{
   mine: Texture
   exit: Texture
   potion: Texture
-  weaponAxe: Texture
-  weaponWand: Texture
+  weapon: Texture
   label: Texture
   energyBall: Texture
   beer: Texture
@@ -40,8 +38,7 @@ export const textures: Readonly<{
   mine: Texture.from(mineImage, textureOptions),
   exit: Texture.from(exitImage, textureOptions),
   potion: Texture.from(potionImage, textureOptions),
-  weaponAxe: Texture.from(weaponAxeImage, textureOptions),
-  weaponWand: Texture.from(weaponWandImage, textureOptions),
+  weapon: Texture.from(weaponImage, textureOptions),
   label: Texture.from(labelImage, textureOptions),
   energyBall: Texture.from(energyBallImage, textureOptions),
   beer: Texture.from(beerImage, textureOptions)
