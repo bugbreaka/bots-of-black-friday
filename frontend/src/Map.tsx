@@ -9,18 +9,23 @@ import { type GameMap } from './types/GameMap'
 import { type GameState } from './types/GameState'
 import { type Item } from './types/Item'
 import { type Position } from './types/Position'
+import { pickByString } from './common/pickByString'
 import wallImage from './assets/wall.png'
 import floorImage from './assets/floor.jpg'
 import mineImage from './assets/mine.png'
 import exitImage from './assets/exit.png'
-import junkOneImage from './assets/junk-1.png'
-import junkTwoImage from './assets/junk-2.png'
-import junkThreeImage from './assets/junk-3.png'
+import junkOneImage from './assets/junk-001.png'
+import junkTwoImage from './assets/junk-002.png'
+import junkThreeImage from './assets/junk-003.png'
 import potionImage from './assets/potion.png'
 import weaponAxeImage from './assets/weapon-axe.png'
 import weaponWandImage from './assets/weapon-wand.png'
 import labelImage from './assets/label.png'
-import playerImage from './assets/player.png'
+import playerOneImage from './assets/player-001.png'
+import playerTwoImage from './assets/player-002.png'
+import playerThreeImage from './assets/player-003.png'
+import playerFourImage from './assets/player-004.png'
+import playerFiveImage from './assets/player-005.png'
 import energyBallImage from './assets/energyball.png'
 import beerImage from './assets/beer.png'
 
@@ -40,16 +45,49 @@ const textures = {
   floor: Texture.from(floorImage, textureOptions),
   mine: Texture.from(mineImage, textureOptions),
   exit: Texture.from(exitImage, textureOptions),
-  junkOne: Texture.from(junkOneImage, textureOptions),
-  junkTwo: Texture.from(junkTwoImage, textureOptions),
-  junkThree: Texture.from(junkThreeImage, textureOptions),
   potion: Texture.from(potionImage, textureOptions),
   weaponAxe: Texture.from(weaponAxeImage, textureOptions),
   weaponWand: Texture.from(weaponWandImage, textureOptions),
   label: Texture.from(labelImage, textureOptions),
-  player: Texture.from(playerImage, textureOptions),
   energyBall: Texture.from(energyBallImage, textureOptions),
   beer: Texture.from(beerImage, textureOptions)
+}
+
+const junkTextures = [
+  Texture.from(junkOneImage, textureOptions),
+  Texture.from(junkTwoImage, textureOptions),
+  Texture.from(junkThreeImage, textureOptions)
+]
+
+function getJunkTexture (x: number, y: number): Texture {
+  return pickByString(`${x}${y}`, junkTextures)
+}
+
+const playerTextures = [
+  Texture.from(playerOneImage, textureOptions),
+  Texture.from(playerTwoImage, textureOptions),
+  Texture.from(playerThreeImage, textureOptions),
+  Texture.from(playerFourImage, textureOptions),
+  Texture.from(playerFiveImage, textureOptions)
+]
+
+function getPlayerTexture (name: string): Texture {
+  return pickByString(name, playerTextures)
+}
+
+// https://www.pixilart.com/palettes/tropical-1333
+const playerTints = [
+  0x991B4B,
+  0xE15365,
+  0xFFA472,
+  0xFFDC8A,
+  0xFEFFF0,
+  0xAFE06E,
+  0x21DB81
+]
+
+function getPlayerTint (name: string): number {
+  return pickByString(name, playerTints)
 }
 
 const zIndex: Readonly<{
@@ -65,6 +103,14 @@ const zIndex: Readonly<{
   projectile: 25,
   playerLabel: 40
 }
+
+/*
+TODO
+  - hajoita Map pienempiin osiin
+  - yksikkötestit canvaksille
+  - depsujen päivitys
+  - asetukset-modaali? tai sitten käännösaikaiset vivut
+*/
 
 const itemLabelFilters = [new AlphaFilter(0.6)]
 
@@ -85,16 +131,6 @@ type MapItem = Item & {
   texture: Texture
   labelText: string | null
   key: string
-}
-
-function getJunkTexture (x: number, y: number): Texture {
-  const sum = Math.abs(x + y)
-
-  if (sum % 2 === 0) {
-    return textures.junkTwo
-  }
-
-  return sum % 3 === 0 ? textures.junkThree : textures.junkOne
 }
 
 function getWeaponTexture (x: number, y: number): Texture {
@@ -363,7 +399,8 @@ export default function Map ({
       y={itemY}
       width={tileWidth}
       height={tileWidth}
-      texture={textures.player}
+      texture={getPlayerTexture(name)}
+      tint={getPlayerTint(name)}
       zIndex={zIndex.player}
     />
   })

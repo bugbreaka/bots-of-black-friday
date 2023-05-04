@@ -1,8 +1,11 @@
-# Bots of Black Friday
+<h1 align="center">Bots of Black Friday</h1>
+<h3 align="center">Shoppers' favorite sale is always the day after Thanksgiving sale, a.k.a. Black Friday</h3>
 
-> Shoppers' favorite sale is always the day after Thanksgiving sale, a.k.a. Black Friday.
+<br>
 
 ![bots shopping to the death](bots.png)
+
+<br>
 
 Bots of Black Friday is a game for code camp events. This repo contains the server code and instructions/templates for bot implementation. The idea is that "a moderator" runs the server in a LAN or Azure. The players (software developers) implement bots that talk to the server.
 
@@ -10,8 +13,9 @@ Bots of Black Friday is a game for code camp events. This repo contains the serv
 
 The frontend sprite images are derived from:
 
-* [Pixel-Boy's ninja adventure asset pack](https://pixel-boy.itch.io/ninja-adventure-asset-pack)
-* [Alifdoll's pixel food](https://alifdoll.itch.io/pixel-food-asset)
+* [Ninja adventure asset pack by Pixel-Boy](https://pixel-boy.itch.io/ninja-adventure-asset-pack)
+* [Pixel food by Alifdoll](https://alifdoll.itch.io/pixel-food-asset)
+* [26 Animated PixelArt Robots by Mounir Tohami](https://mounirtohami.itch.io/26-animated-pixelart-robots)
 
 ## Rules of the game
 
