@@ -6,10 +6,10 @@ import { Sprite as AnimatedSprite } from '@pixi/react-animated'
 import { isNull } from 'lodash'
 import { type GameState } from '@src/types/GameState'
 import { type Item } from '@src/types/Item'
-import { type Position } from '@src/types/Position'
 import { pickByString } from '@src/utils/pickByString'
 import { type MapDimensions } from '@src/utils/MapDimensions'
 import { getJunkTexture, getPlayerTexture, textures } from '@src/utils/textures'
+import { type PixelPosition, toPixelPosition } from '@src/utils/toPixelPosition'
 
 // https://www.pixilart.com/palettes/tropical-1333
 const playerTints = [
@@ -61,8 +61,7 @@ const labelTextStyle = new TextStyle({
 })
 
 type MapItem = Item & {
-  itemX: number
-  itemY: number
+  itemPosition: PixelPosition
   texture: Texture
   labelText: string | null
   key: string
@@ -78,30 +77,27 @@ function getWeaponTexture (x: number, y: number): Texture {
 function Label ({
   text,
   halfTileWidth,
-  itemX,
-  itemY,
+  itemPosition,
   zIndex,
   filters
 }: {
   text: string
   halfTileWidth: number
-  itemX: number
-  itemY: number
+  itemPosition: PixelPosition
   zIndex: number
   filters: Filter[]
 }): JSX.Element {
   const labelMetrics = TextMetrics.measureText(text, labelTextStyle)
 
-  const labelPadding = 16
-  const halfLabelPadding = Math.round(labelPadding / 2)
+  const labelPadding = 8
 
-  const labelWidth = labelMetrics.maxLineWidth + labelPadding
-  const labelHeight = labelMetrics.height + labelPadding
-  const labelX = itemX + (Math.round(labelWidth / 2) * -1) + halfTileWidth
-  const labelY = itemY + (labelHeight * -1) - halfLabelPadding
+  const labelWidth = labelMetrics.maxLineWidth + labelPadding + labelPadding
+  const labelHeight = labelMetrics.height + labelPadding + labelPadding
+  const labelX = itemPosition.xInPx - Math.round(labelWidth * 0.5)
+  const labelY = itemPosition.yInPx - labelHeight - Math.round(halfTileWidth * 1.3)
 
-  const labelContentX = halfLabelPadding
-  const labelContentY = halfLabelPadding
+  const labelContentX = labelPadding
+  const labelContentY = labelPadding
 
   return (
     <Container
@@ -142,13 +138,6 @@ function getItemLabelText ({ type, price, discountPercent }: Item): string | nul
   return null
 }
 
-function toPixels ({ x, y }: Position, tileWidth: number, halfTileWidth: number): Position {
-  return {
-    x: (x * tileWidth) + halfTileWidth,
-    y: (y * tileWidth) + halfTileWidth
-  }
-}
-
 /**
  * Sprite must be oriented originally upwards.
  *
@@ -158,15 +147,18 @@ function toPixels ({ x, y }: Position, tileWidth: number, halfTileWidth: number)
  * @param targetY
  */
 function rotateSpriteToTarget (
-  { x: originX, y: originY }: Position,
-  { x: targetX, y: targetY }: Position
+  { xInPx: originX, yInPx: originY }: PixelPosition,
+  { xInPx: targetX, yInPx: targetY }: PixelPosition
 ): number {
   const shiftedOriginX = 0
   const shiftedOriginY = -15
   const shiftedTargetX = targetX - originX
   const shiftedTargetY = targetY - originY
 
-  const angle = Math.atan2((shiftedTargetY * shiftedOriginX) - (shiftedTargetX * shiftedOriginY), (shiftedTargetX * shiftedOriginX) + (shiftedTargetY * shiftedOriginY))
+  const angle = Math.atan2(
+    (shiftedTargetY * shiftedOriginX) - (shiftedTargetX * shiftedOriginY),
+    (shiftedTargetX * shiftedOriginX) + (shiftedTargetY * shiftedOriginY)
+  )
   return angle
 }
 
@@ -191,43 +183,41 @@ export function MapDynamicContent ({
   const mapItems = items.map((item): MapItem | null => {
     const {
       type,
-      position: { x, y }
+      position
     } = item
 
     let texture: Texture
     if (type === 'JUST_SOME_JUNK') {
-      texture = getJunkTexture(x, y)
+      texture = getJunkTexture(position.x, position.y)
     } else if (type === 'WEAPON') {
-      texture = getWeaponTexture(x, y)
+      texture = getWeaponTexture(position.x, position.y)
     } else if (type === 'POTION') {
       texture = showBeer ? textures.beer : textures.potion
     } else {
       return null
     }
 
-    const itemX = x * tileWidth
-    const itemY = y * tileWidth
+    const itemPosition = toPixelPosition(position, tileWidth, halfTileWidth)
 
     return {
       ...item,
       texture,
       labelText: getItemLabelText(item),
-      itemX,
-      itemY,
-      key: `${type}-${y}-${x}`
+      itemPosition,
+      key: `${type}-${position.y}-${position.x}`
     }
   }).filter((item): item is MapItem => !isNull(item))
 
   const mapItemSprites = mapItems.map(({
     key,
-    itemX,
-    itemY,
+    itemPosition,
     texture
   }) => {
     return <Sprite
       key={`${key}-sprite`}
-      x={itemX}
-      y={itemY}
+      anchor={[0.5, 0.5]}
+      x={itemPosition.xInPx}
+      y={itemPosition.yInPx}
       width={tileWidth}
       height={tileWidth}
       texture={texture}
@@ -240,29 +230,27 @@ export function MapDynamicContent ({
     .filter((item): item is MapItemWithLabel => !isNull(item.labelText))
     .map(({
       key,
-      itemX,
-      itemY,
+      itemPosition,
       labelText
     }) => {
       return <Label
         key={`${key}-label`}
         text={labelText}
         halfTileWidth={halfTileWidth}
-        itemX={itemX}
-        itemY={itemY}
+        itemPosition={itemPosition}
         filters={itemLabelFilters}
         zIndex={zIndex.itemLabel}
       />
     })
 
-  const playerSprites = players.map(({ name, position: { x, y } }) => {
-    const itemX = x * tileWidth
-    const itemY = y * tileWidth
+  const playerSprites = players.map(({ name, position }) => {
+    const playerPosition = toPixelPosition(position, tileWidth, halfTileWidth)
 
     return <Sprite
       key={`player-${name}-sprite`}
-      x={itemX}
-      y={itemY}
+      anchor={[0.5, 0.5]}
+      x={playerPosition.xInPx}
+      y={playerPosition.yInPx}
       width={tileWidth}
       height={tileWidth}
       texture={getPlayerTexture(name)}
@@ -271,9 +259,8 @@ export function MapDynamicContent ({
     />
   })
 
-  const playerLabelSprites = players.map(({ name, position: { x, y }, timeInState }) => {
-    const itemX = x * tileWidth
-    const itemY = y * tileWidth
+  const playerLabelSprites = players.map(({ name, position, timeInState }) => {
+    const playerPosition = toPixelPosition(position, tileWidth, halfTileWidth)
 
     const label = timeInState > 0 ? `${name}\n(${timeInState})` : name
 
@@ -281,8 +268,7 @@ export function MapDynamicContent ({
       key={`player-${name}-label`}
       text={label}
       halfTileWidth={halfTileWidth}
-      itemX={itemX}
-      itemY={itemY}
+      itemPosition={playerPosition}
       filters={playerLabelFilters}
       zIndex={zIndex.playerLabel}
     />
@@ -291,12 +277,12 @@ export function MapDynamicContent ({
   const shootingAnimations = shootingLines
     .filter(({ age }) => age < 2)
     .map(({ fromPosition, toPosition }) => {
-      const from = toPixels(fromPosition, tileWidth, halfTileWidth)
-      const to = toPixels(toPosition, tileWidth, halfTileWidth)
+      const from = toPixelPosition(fromPosition, tileWidth, halfTileWidth)
+      const to = toPixelPosition(toPosition, tileWidth, halfTileWidth)
       const rotation = rotateSpriteToTarget(from, to)
 
       return <Spring
-        key={`projectile-${from.x}-${from.y}-to-${to.x}-${to.y}`}
+        key={`projectile-${fromPosition.x}-${fromPosition.y}-to-${toPosition.x}-${toPosition.y}`}
         from={from}
         to={to}
         config={{ clamp: true }}
