@@ -1,8 +1,6 @@
 import React from 'react'
 import { Container, NineSlicePlane, Sprite, Text } from '@pixi/react'
 import { AlphaFilter, type Filter, TextMetrics, TextStyle, type Texture } from 'pixi.js'
-import { Spring } from '@react-spring/web'
-import { Sprite as AnimatedSprite } from '@pixi/react-animated'
 import { isNull } from 'lodash'
 import { type GameState } from '@src/types/GameState'
 import { type Item } from '@src/types/Item'
@@ -10,6 +8,8 @@ import { pickByString } from '@src/utils/pickByString'
 import { type MapDimensions } from '@src/utils/MapDimensions'
 import { getJunkTexture, getPlayerTexture, textures } from '@src/utils/textures'
 import { type PixelPosition, toPixelPosition } from '@src/utils/toPixelPosition'
+import { zIndex } from '@src/utils/zIndex'
+import { Projectile } from '@src/components/Projectile'
 
 // https://www.pixilart.com/palettes/tropical-1333
 const playerTints = [
@@ -24,20 +24,6 @@ const playerTints = [
 
 function getPlayerTint (name: string): number {
   return pickByString(name, playerTints)
-}
-
-const zIndex: Readonly<{
-  item: number
-  itemLabel: number
-  player: number
-  projectile: number
-  playerLabel: number
-}> = {
-  item: 10,
-  itemLabel: 30,
-  player: 20,
-  projectile: 25,
-  playerLabel: 40
 }
 
 /*
@@ -136,30 +122,6 @@ function getItemLabelText ({ type, price, discountPercent }: Item): string | nul
   }
 
   return null
-}
-
-/**
- * Sprite must be oriented originally upwards.
- *
- * @param originX
- * @param originY
- * @param targetX
- * @param targetY
- */
-function rotateSpriteToTarget (
-  { xInPx: originX, yInPx: originY }: PixelPosition,
-  { xInPx: targetX, yInPx: targetY }: PixelPosition
-): number {
-  const shiftedOriginX = 0
-  const shiftedOriginY = -15
-  const shiftedTargetX = targetX - originX
-  const shiftedTargetY = targetY - originY
-
-  const angle = Math.atan2(
-    (shiftedTargetY * shiftedOriginX) - (shiftedTargetX * shiftedOriginY),
-    (shiftedTargetX * shiftedOriginX) + (shiftedTargetY * shiftedOriginY)
-  )
-  return angle
 }
 
 export function MapDynamicContent ({
@@ -274,36 +236,23 @@ export function MapDynamicContent ({
     />
   })
 
-  const shootingAnimations = shootingLines
+  const projectiles = shootingLines
     .filter(({ age }) => age < 2)
     .map(({ fromPosition, toPosition }) => {
-      const from = toPixelPosition(fromPosition, tileWidth, halfTileWidth)
-      const to = toPixelPosition(toPosition, tileWidth, halfTileWidth)
-      const rotation = rotateSpriteToTarget(from, to)
-
-      return <Spring
+      return <Projectile
         key={`projectile-${fromPosition.x}-${fromPosition.y}-to-${toPosition.x}-${toPosition.y}`}
-        from={from}
-        to={to}
-        config={{ clamp: true }}
-      >
-        {(props: any) => <AnimatedSprite
-          texture={textures.energyBall}
-          anchor={[0.5, 0.5]}
-          width={tileWidth}
-          height={tileWidth}
-          rotation={rotation}
-          zIndex={zIndex.projectile}
-          {...props}
-        />}
-      </Spring>
+        fromPosition={fromPosition}
+        toPosition={toPosition}
+        tileWidth={tileWidth}
+        halfTileWidth={halfTileWidth}
+      />
     })
 
   return (
     <Container key="map-items-and-players" position={[0, 0]} sortableChildren={true}>
       {mapItemSprites}
       {playerSprites}
-      {shootingAnimations}
+      {projectiles}
       {mapItemLabelSprites}
       {playerLabelSprites}
     </Container>
