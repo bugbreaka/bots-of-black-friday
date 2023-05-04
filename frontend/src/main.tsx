@@ -1,4 +1,4 @@
-import React, { createRef } from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { useResizeDetector } from 'react-resize-detector'
 import { Client, type IFrame, type Message } from '@stomp/stompjs'
@@ -6,7 +6,8 @@ import { type GameState } from '@src/types/GameState'
 import { type GameMap } from '@src/types/GameMap'
 import { type Player } from '@src/types/Player'
 import { errorResult, type Result, valueResult } from '@src/utils/Result'
-import { isGameMap, isGameState } from './utils/typeUtils'
+import { isGameMap, isGameState } from '@src/utils/typeUtils'
+import { calculateMapDimensions } from '@src/utils/MapDimensions'
 import Chat from '@src/components/Chat'
 import Scoreboard from '@src/components/Scoreboard'
 import { Toggle } from '@src/components/Toggle'
@@ -14,7 +15,7 @@ import Map from '@src/Map'
 import beerImage from '@src/assets/beer.png'
 import '@src/index.css'
 
-interface GameStateChanged {
+interface GameEvent {
   reason?: string
   gameState?: GameState
   newMap?: GameMap
@@ -26,21 +27,39 @@ function ErrorMessage ({ message }: { message: string }): JSX.Element {
   )
 }
 
-function ContainerWidth ({ containerRef, children }: {
-  children: (containerWidth: number) => JSX.Element
-  containerRef: React.RefObject<any>
+function MapContainer ({
+  gameMap,
+  gameState,
+  showBeer,
+  showMapGrid,
+  showItemLabels
+}: {
+  gameMap: Result<GameMap>
+  gameState: Result<GameState>
+  showBeer: boolean
+  showMapGrid: boolean
+  showItemLabels: boolean
 }): JSX.Element {
-  const { width: containerWidth } = useResizeDetector({ targetRef: containerRef })
+  const { width: containerWidth, ref } = useResizeDetector()
 
-  if (containerWidth === undefined) {
-    return (
-      <p className="text-sm uppercase py-4">Loading...</p>
-    )
-  }
+  const dimensions = calculateMapDimensions(gameMap, containerWidth)
 
-  return <>
-    {children(containerWidth)}
-  </>
+  return <div ref={ref}>
+    {!gameMap.ok && <ErrorMessage
+      message={`Game map error: ${JSON.stringify(gameMap.error, null, '  ')}`}
+    />}
+    {!gameState.ok && <ErrorMessage
+      message={`Game state error: ${JSON.stringify(gameState.error, null, '  ')}`}
+    />}
+    {dimensions !== undefined && gameMap.ok && gameState.ok && <Map
+      gameMap={gameMap.value}
+      gameState={gameState.value}
+      dimensions={dimensions}
+      showBeer={showBeer}
+      showMapGrid={showMapGrid}
+      showItemLabels={showItemLabels}
+    />}
+  </div>
 }
 
 class App extends React.Component<unknown, {
@@ -55,11 +74,9 @@ class App extends React.Component<unknown, {
 }> {
   private readonly maxMessages = 10
   private stompClient: Client | undefined
-  private readonly containerRef: React.RefObject<any>
 
   constructor (props: unknown) {
     super(props)
-    this.containerRef = createRef()
     this.state = {
       gameMap: errorResult('No game map.'),
       gameState: errorResult('No game state.'),
@@ -165,30 +182,45 @@ class App extends React.Component<unknown, {
   }
 
   handleChatEvent (message: Message): void {
-    const newMessage = message.body
-    this.setState((state) => ({
-      ...state,
-      chatMessages: [
-        newMessage,
-        ...state.chatMessages.slice(0, this.maxMessages - 1)
-      ]
-    }))
+    try {
+      const newMessage = message.body
+      this.setState((state) => ({
+        ...state,
+        chatMessages: [
+          newMessage,
+          ...state.chatMessages.slice(0, this.maxMessages - 1)
+        ]
+      }))
+    } catch (err) {
+      this.setState((state) => ({
+        ...state,
+        chatMessages: []
+      }))
+    }
   }
 
   handleGameEvent (message: Message): void {
-    const stateChange = JSON.parse(message.body) as GameStateChanged
-    const newMap = stateChange.newMap
-    const newState = stateChange.gameState
+    try {
+      const eventPayload = JSON.parse(message.body) as GameEvent
+      const newMap = eventPayload.newMap
+      const newState = eventPayload.gameState
 
-    if (isGameMap(newMap)) {
+      if (isGameMap(newMap)) {
+        this.setState((state) => ({
+          ...state,
+          gameMap: valueResult(newMap)
+        }))
+      } else if (isGameState(newState)) {
+        this.setState((state) => ({
+          ...state,
+          ...this.derivedGameState(valueResult(newState))
+        }))
+      }
+    } catch (err) {
       this.setState((state) => ({
         ...state,
-        gameMap: valueResult(newMap)
-      }))
-    } else if (isGameState(newState)) {
-      this.setState((state) => ({
-        ...state,
-        ...this.derivedGameState(valueResult(newState))
+        gameMap: errorResult('handleGameEvent error.'),
+        ...this.derivedGameState(errorResult('handleGameEvent error.'))
       }))
     }
   }
@@ -217,7 +249,7 @@ class App extends React.Component<unknown, {
     } = this.state
 
     return (
-      <div className="mx-auto min-h-screen bg-zinc-900 tracking-wider">
+      <div className="mx-auto min-h-screen bg-zinc-900">
         <header className="flex flex-row sticky top-0 p-4 bg-zinc-800 border-4 border-zinc-800 border-b-zinc-400">
           <div className="flex-1 self-center">
             <h2 className="text-xs">Bots of Black Friday</h2>
@@ -231,23 +263,14 @@ class App extends React.Component<unknown, {
           </div>
           <div className="flex-1"></div>
         </header>
-        <div ref={this.containerRef} className="p-4">
-          {!gameMap.ok && <ErrorMessage
-            message={`Game map error: ${JSON.stringify(gameMap.error, null, '  ')}`}
-          />}
-          {!gameState.ok && <ErrorMessage
-            message={`Game state error: ${JSON.stringify(gameState.error, null, '  ')}`}
-          />}
-          {gameMap.ok && gameState.ok && <ContainerWidth containerRef={this.containerRef}>
-            {(containerWidth) => <Map
-              gameMap={gameMap.value}
-              gameState={gameState.value}
-              containerWidth={containerWidth}
-              showBeer={showBeer}
-              showMapGrid={showMapGrid}
-              showItemLabels={showItemLabels}
-            />}
-          </ContainerWidth>}
+        <div className="p-4">
+          <MapContainer
+            gameMap={gameMap}
+            gameState={gameState}
+            showBeer={showBeer}
+            showMapGrid={showMapGrid}
+            showItemLabels={showItemLabels}
+          />
           <div className="flex flex-row gap-4 pt-4">
             <div className="flex-1">
               <Toggle

@@ -10,6 +10,7 @@ import { type GameState } from '@src/types/GameState'
 import { type Item } from '@src/types/Item'
 import { type Position } from '@src/types/Position'
 import { pickByString } from '@src/utils/pickByString'
+import { type MapDimensions } from '@src/utils/MapDimensions'
 import wallImage from '@src/assets/wall.png'
 import floorImage from '@src/assets/floor.jpg'
 import mineImage from '@src/assets/mine.png'
@@ -109,7 +110,6 @@ TODO
   - hajoita Map pienempiin osiin
   - yksikkötestit canvaksille
   - depsujen päivitys
-  - asetukset-modaali? tai sitten käännösaikaiset vivut
 */
 
 const itemLabelFilters = [new AlphaFilter(0.6)]
@@ -255,14 +255,20 @@ export default function Map ({
     players,
     shootingLines
   },
-  containerWidth,
+  dimensions: {
+    containerWidth,
+    tileWidth,
+    halfTileWidth,
+    stageWidth,
+    stageHeight
+  },
   showBeer,
   showMapGrid,
   showItemLabels
 }: {
   gameMap: GameMap
   gameState: GameState
-  containerWidth: number
+  dimensions: MapDimensions
   showBeer: boolean
   showMapGrid: boolean
   showItemLabels: boolean
@@ -281,11 +287,6 @@ export default function Map ({
       g.lineTo(x * tileWidth, height * tileWidth)
     }
   }, [containerWidth, width, height])
-
-  const tileWidth = Math.floor(containerWidth / width)
-  const halfTileWidth = Math.round(tileWidth / 2)
-  const stageWidth = width * tileWidth
-  const stageHeight = height * tileWidth
 
   // Note! Floor texture is 1024 px times 1024 px and contains 12 tiles
   const floorTileScale = (tileWidth / (textures.floor.width / 12))

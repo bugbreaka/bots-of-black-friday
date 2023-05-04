@@ -4,7 +4,7 @@
 
 @layer base{
     body{
-        @apply font-bots text-zinc-50
+        @apply font-bots text-zinc-50 tracking-wider
     }
 }
 
