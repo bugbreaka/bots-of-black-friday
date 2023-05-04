@@ -2,15 +2,17 @@ import React, { createRef } from 'react'
 import ReactDOM from 'react-dom/client'
 import { useResizeDetector } from 'react-resize-detector'
 import { Client, type IFrame, type Message } from '@stomp/stompjs'
-import { type GameState } from './types/GameState'
-import { type GameMap } from './types/GameMap'
-import { type Player } from './types/Player'
-import Chat from './Chat'
-import Map from './Map'
-import Scoreboard from './Scoreboard'
-import beerImage from './assets/beer.png'
-import { errorResult, type Result, valueResult } from './Result'
-import './index.css'
+import { type GameState } from '@src/types/GameState'
+import { type GameMap } from '@src/types/GameMap'
+import { type Player } from '@src/types/Player'
+import { errorResult, type Result, valueResult } from '@src/utils/Result'
+import { isGameMap, isGameState } from './utils/typeUtils'
+import Chat from '@src/components/Chat'
+import Scoreboard from '@src/components/Scoreboard'
+import { Toggle } from '@src/components/Toggle'
+import Map from '@src/Map'
+import beerImage from '@src/assets/beer.png'
+import '@src/index.css'
 
 interface GameStateChanged {
   reason?: string
@@ -18,47 +20,9 @@ interface GameStateChanged {
   newMap?: GameMap
 }
 
-function objectHasRequiredProperties<T extends object> (
-  obj: T,
-  required: Array<keyof T>
-): boolean {
-  if (obj === null || obj === undefined) {
-    return false
-  }
-
-  return required.every(k => k in obj)
-}
-
-function isGameState (v: any): v is GameState {
-  return objectHasRequiredProperties<GameState>(
-    v,
-    [
-      'players',
-      'finishedPlayers',
-      'items',
-      'round',
-      'shootingLines'
-    ]
-  )
-}
-
-function isGameMap (v: any): v is GameMap {
-  return objectHasRequiredProperties<GameMap>(
-    v,
-    [
-      'width',
-      'height',
-      'maxItemCount',
-      'tiles',
-      'name',
-      'exit'
-    ]
-  )
-}
-
 function ErrorMessage ({ message }: { message: string }): JSX.Element {
   return (
-    <p className="font-bots text-sm text-red-500 uppercase py-4">{message}</p>
+    <p className="text-sm text-red-500 uppercase py-4">{message}</p>
   )
 }
 
@@ -70,7 +34,7 @@ function ContainerWidth ({ containerRef, children }: {
 
   if (containerWidth === undefined) {
     return (
-      <p className="font-bots text-sm text-zinc-50 uppercase py-4">Loading...</p>
+      <p className="text-sm uppercase py-4">Loading...</p>
     )
   }
 
@@ -79,38 +43,11 @@ function ContainerWidth ({ containerRef, children }: {
   </>
 }
 
-function Toggle ({ id, label, checked, onChange }: {
-  id: string
-  label: string | JSX.Element
-  checked: boolean
-  onChange: (val: boolean) => void
-}): JSX.Element {
-  /* Original HTML / Tailwind CSS Source: https://tailwindcomponents.com/component/toggle-switch */
-  return <div>
-    <div
-      className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in"
-    >
-      <input
-        type="checkbox"
-        name={id}
-        id={id}
-        checked={checked}
-        className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-        onChange={(e) => {
-          onChange(e.target.checked)
-        }}
-      />
-      <label
-        htmlFor={id}
-        className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-    </div>
-    <label htmlFor={id} className="font-bots text-[0.5rem] text-zinc-50">{label}</label>
-  </div>
-}
-
 class App extends React.Component<unknown, {
   gameState: Result<GameState>
   gameMap: Result<GameMap>
+  players: Player[]
+  finishedPlayers: Player[]
   chatMessages: string[]
   showBeer: boolean
   showItemLabels: boolean
@@ -126,10 +63,50 @@ class App extends React.Component<unknown, {
     this.state = {
       gameMap: errorResult('No game map.'),
       gameState: errorResult('No game state.'),
+      players: [],
+      finishedPlayers: [],
       chatMessages: [],
       showBeer: false,
       showItemLabels: true,
       showMapGrid: false
+    }
+  }
+
+  comparePlayersByName (a: Player, b: Player): number {
+    const nameA = a.name.toUpperCase()
+    const nameB = b.name.toUpperCase()
+
+    if (nameA < nameB) {
+      return -1
+    }
+    if (nameA > nameB) {
+      return 1
+    }
+
+    return 0
+  }
+
+  comparePlayersByScore (a: Player, b: Player): number {
+    const scoreA = a.money + a.score
+    const scoreB = b.money + b.score
+
+    return scoreA - scoreB
+  }
+
+  derivedGameState (gameState: Result<GameState>): ({
+    gameState: Result<GameState>
+    players: Player[]
+    finishedPlayers: Player[]
+  }) {
+    const players = (gameState.ok ? [...gameState.value.players] : [])
+      .sort(this.comparePlayersByName)
+    const finishedPlayers = (gameState.ok ? [...gameState.value.finishedPlayers] : [])
+      .sort(this.comparePlayersByScore)
+
+    return {
+      gameState,
+      players,
+      finishedPlayers
     }
   }
 
@@ -171,7 +148,7 @@ class App extends React.Component<unknown, {
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         gameMap: errorResult(`WebSocket error: ${event}`),
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        gameState: errorResult(`WebSocket error: ${event}`)
+        ...this.derivedGameState(errorResult(`WebSocket error: ${event}`))
       }))
     }
 
@@ -179,7 +156,7 @@ class App extends React.Component<unknown, {
       this.setState((state) => ({
         ...state,
         gameMap: errorResult(`Stomp error: ${frame.command}`),
-        gameState: errorResult(`Stomp error: ${frame.command}`)
+        ...this.derivedGameState(errorResult(`Stomp error: ${frame.command}`))
       }))
     }
 
@@ -211,7 +188,7 @@ class App extends React.Component<unknown, {
     } else if (isGameState(newState)) {
       this.setState((state) => ({
         ...state,
-        gameState: valueResult(newState)
+        ...this.derivedGameState(valueResult(newState))
       }))
     }
   }
@@ -227,124 +204,98 @@ class App extends React.Component<unknown, {
     await this.stompClient?.deactivate()
   }
 
-  comparePlayersByName (a: Player, b: Player): number {
-    const nameA = a.name.toUpperCase()
-    const nameB = b.name.toUpperCase()
-
-    if (nameA < nameB) {
-      return -1
-    }
-    if (nameA > nameB) {
-      return 1
-    }
-
-    return 0
-  }
-
-  comparePlayersByScore (a: Player, b: Player): number {
-    const scoreA = a.money + a.score
-    const scoreB = b.money + b.score
-
-    return scoreA - scoreB
-  }
-
   render (): JSX.Element {
     const {
       gameState,
       gameMap,
+      players,
+      finishedPlayers,
       chatMessages,
       showBeer,
       showMapGrid,
       showItemLabels
     } = this.state
 
-    const sortedPlayers = (gameState.ok ? [...gameState.value.players] : [])
-      .sort(this.comparePlayersByName)
-    const sortedFinishedPlayers = (gameState.ok ? [...gameState.value.finishedPlayers] : [])
-      .sort(this.comparePlayersByScore)
-
     return (
-      <>
-        <div className="mx-auto min-h-screen bg-zinc-900 tracking-wider">
-          <header className="flex flex-row sticky top-0 p-4 bg-zinc-800 border-4 border-zinc-800 border-b-zinc-400">
-            <div className="flex-1 self-center">
-              <h2 className="font-bots text-xs text-zinc-50">Bots of Black Friday</h2>
-            </div>
-            <div>
-              {gameMap.ok &&
-                <h1 className="font-bots text-transparent text-2xl bg-clip-text bg-gradient-to-b from-amber-800 to-amber-100">
-                  {gameMap.value.name}
-                </h1>
-              }
-            </div>
-            <div className="flex-1"></div>
-          </header>
-          <div ref={this.containerRef} className="p-4">
-            {!gameMap.ok && <ErrorMessage
-              message={`Game map error: ${JSON.stringify(gameMap.error, null, '  ')}`}
+      <div className="mx-auto min-h-screen bg-zinc-900 tracking-wider">
+        <header className="flex flex-row sticky top-0 p-4 bg-zinc-800 border-4 border-zinc-800 border-b-zinc-400">
+          <div className="flex-1 self-center">
+            <h2 className="text-xs">Bots of Black Friday</h2>
+          </div>
+          <div>
+            {gameMap.ok &&
+              <h1 className="text-transparent text-2xl bg-clip-text bg-gradient-to-b from-amber-800 to-amber-100">
+                {gameMap.value.name}
+              </h1>
+            }
+          </div>
+          <div className="flex-1"></div>
+        </header>
+        <div ref={this.containerRef} className="p-4">
+          {!gameMap.ok && <ErrorMessage
+            message={`Game map error: ${JSON.stringify(gameMap.error, null, '  ')}`}
+          />}
+          {!gameState.ok && <ErrorMessage
+            message={`Game state error: ${JSON.stringify(gameState.error, null, '  ')}`}
+          />}
+          {gameMap.ok && gameState.ok && <ContainerWidth containerRef={this.containerRef}>
+            {(containerWidth) => <Map
+              gameMap={gameMap.value}
+              gameState={gameState.value}
+              containerWidth={containerWidth}
+              showBeer={showBeer}
+              showMapGrid={showMapGrid}
+              showItemLabels={showItemLabels}
             />}
-            {!gameState.ok && <ErrorMessage
-              message={`Game state error: ${JSON.stringify(gameState.error, null, '  ')}`}
-            />}
-            {gameMap.ok && gameState.ok && <ContainerWidth containerRef={this.containerRef}>
-              {(containerWidth) => <Map
-                gameMap={gameMap.value}
-                gameState={gameState.value}
-                containerWidth={containerWidth}
-                showBeer={showBeer}
-                showMapGrid={showMapGrid}
-                showItemLabels={showItemLabels}
-              />}
-            </ContainerWidth>}
-            <div className="flex flex-row gap-4 pt-4">
-              <div className="flex-1">
-                <Toggle
-                  id="show-map-grid"
-                  label="Map grid"
-                  checked={showMapGrid}
-                  onChange={(v) => { this.handleToggle('showMapGrid', v) }}
-                />
-              </div>
-              <div className="flex-1">
-                <Toggle
-                  id="show-item-labels"
-                  label="Item labels"
-                  checked={showItemLabels}
-                  onChange={(v) => { this.handleToggle('showItemLabels', v) }}
-                />
-              </div>
-              <div className="flex-1">
-                <Toggle
-                  id="show-beer"
-                  label={<img className="inline" src={beerImage} alt="🍺" />}
-                  checked={showBeer}
-                  onChange={(v) => { this.handleToggle('showBeer', v) }}
-                />
-              </div>
+          </ContainerWidth>}
+          <div className="flex flex-row gap-4 pt-4">
+            <div className="flex-1">
+              <Toggle
+                id="show-map-grid"
+                label="Map grid"
+                checked={showMapGrid}
+                onChange={(v) => { this.handleToggle('showMapGrid', v) }}
+              />
             </div>
-            <div className="flex flex-row gap-4 pt-4">
-              <div className="flex-1 rounded bg-zinc-700 p-4">
-                <h3 className="font-bots text-sm text-zinc-50 uppercase pb-4">
-                  Active players
-                </h3>
-                <Scoreboard players={sortedPlayers} />
-              </div>
-              <div className="flex-1 rounded bg-zinc-700 p-4">
-                <h3 className="font-bots text-sm text-zinc-50 uppercase pb-4">
-                  Scoreboard
-                </h3>
-                <Scoreboard players={sortedFinishedPlayers} />
-              </div>
-              <div className="flex-1 rounded bg-zinc-700 p-4">
-                <h3 className="font-bots text-sm text-zinc-50 uppercase pb-4">
-                  Chat
-                </h3>
-                <Chat messages={chatMessages} />
-              </div>
+            <div className="flex-1">
+              <Toggle
+                id="show-item-labels"
+                label="Item labels"
+                checked={showItemLabels}
+                onChange={(v) => { this.handleToggle('showItemLabels', v) }}
+              />
+            </div>
+            <div className="flex-1">
+              <Toggle
+                id="show-beer"
+                label={<img className="inline" src={beerImage} alt="🍺" />}
+                checked={showBeer}
+                onChange={(v) => { this.handleToggle('showBeer', v) }}
+              />
+            </div>
+          </div>
+          <div className="flex flex-row gap-4 pt-4">
+            <div className="flex-1 rounded bg-zinc-700 p-4">
+              <h3 className="text-sm uppercase pb-4">
+                Active players
+              </h3>
+              <Scoreboard players={players} />
+            </div>
+            <div className="flex-1 rounded bg-zinc-700 p-4">
+              <h3 className="text-sm uppercase pb-4">
+                Scoreboard
+              </h3>
+              <Scoreboard players={finishedPlayers} />
+            </div>
+            <div className="flex-1 rounded bg-zinc-700 p-4">
+              <h3 className="text-sm uppercase pb-4">
+                Chat
+              </h3>
+              <Chat messages={chatMessages} />
             </div>
           </div>
         </div>
-      </>
+      </div>
     )
   }
 }

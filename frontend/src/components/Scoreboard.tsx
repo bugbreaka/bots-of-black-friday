@@ -1,9 +1,9 @@
 import React from 'react'
-import { type Player } from './types/Player'
+import { type Player } from '@src/types/Player'
 
 export default function Scoreboard ({ players }: { players: Player[] }): JSX.Element {
   return (
-      <table className="font-bots table-fixed text-[0.5rem] text-zinc-50 text-left w-full">
+      <table className="table-fixed text-[0.5rem] text-left w-full">
         <thead>
         <tr>
           <th>Name</th>

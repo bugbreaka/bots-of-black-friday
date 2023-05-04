@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base{
+    body{
+        @apply font-bots text-zinc-50
+    }
+}
+
 /* CHECKBOX TOGGLE SWITCH */
 /* @apply rules for documentation, these do not work as inline style */
 /* Source: https://tailwindcomponents.com/component/toggle-switch */

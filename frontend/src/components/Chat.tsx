@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function Chat ({ messages }: { messages: string[] }): JSX.Element {
   return (
-      <table className="font-bots table-fixed text-[0.5rem] text-zinc-50 text-left w-full">
+      <table className="table-fixed text-[0.5rem] text-left w-full">
         <thead>
         <tr>
           <th>&nbsp;</th>
