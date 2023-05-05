@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useSpring } from '@react-spring/web'
 import { Sprite as AnimatedSprite } from '@pixi/react-animated'
 import { textures } from '@src/utils/textures'
@@ -45,6 +45,8 @@ export const Projectile: React.FunctionComponent<ProjectileProperties> = functio
 }) {
   const from = toPixelPosition(fromPosition, tileWidth, halfTileWidth)
   const to = toPixelPosition(toPosition, tileWidth, halfTileWidth)
+  const [rotation] = useState(rotateSpriteToTarget(from, to))
+
   const props = useSpring({
     from: { x: from.xInPx, y: from.yInPx },
     to: { x: to.xInPx, y: to.yInPx },
@@ -52,7 +54,6 @@ export const Projectile: React.FunctionComponent<ProjectileProperties> = functio
       clamp: true
     }
   })
-  const rotation = rotateSpriteToTarget(from, to)
 
   return (<AnimatedSprite
     texture={textures.energyBall}
