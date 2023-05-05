@@ -1,12 +1,14 @@
 @tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-@layer base{
-    body{
-        @apply font-bots text-zinc-50 tracking-wider
+@layer base {
+    body {
+        @apply font-bots text-zinc-50 tracking-wider;
     }
 }
+
+@tailwind components;
+
+@tailwind utilities;
 
 /* CHECKBOX TOGGLE SWITCH */
 /* @apply rules for documentation, these do not work as inline style */
