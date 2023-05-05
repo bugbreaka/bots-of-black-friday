@@ -16,7 +16,6 @@ import { labelFilters } from '@src/utils/labelFilters'
 /*
 TODO
   - yksikkötestit canvaksille
-  - depsujen päivitys
 */
 
 function getItemLabelText ({ type, price, discountPercent }: Item): string | null {
