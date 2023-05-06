@@ -17,12 +17,12 @@ export function MapGrid ({
     g.clear()
     g.lineStyle(1, 0xD97706, 0.6)
 
-    for (let y = 1; y < height - 1; y++) {
+    for (let y = 1; y < height; y++) {
       g.moveTo(0, y * tileWidth)
       g.lineTo(width * tileWidth, y * tileWidth)
     }
 
-    for (let x = 1; x < width - 1; x++) {
+    for (let x = 1; x < width; x++) {
       g.moveTo(x * tileWidth, 0)
       g.lineTo(x * tileWidth, height * tileWidth)
     }
