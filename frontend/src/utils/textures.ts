@@ -17,6 +17,7 @@ import playerFourImage from '@src/assets/player-004.png'
 import playerFiveImage from '@src/assets/player-005.png'
 import energyBallImage from '@src/assets/energyball.png'
 import beerImage from '@src/assets/beer.png'
+import { type Item } from '@src/types/Item'
 
 const textureOptions = {
   scaleMode: SCALE_MODES.NEAREST
@@ -44,7 +45,7 @@ export const textures: Readonly<{
   beer: Texture.from(beerImage, textureOptions)
 }
 
-const junkTextures = [
+export const junkTextures: readonly Texture[] = [
   Texture.from(junkOneImage, textureOptions),
   Texture.from(junkTwoImage, textureOptions),
   Texture.from(junkThreeImage, textureOptions)
@@ -54,7 +55,19 @@ export function getJunkTexture (x: number, y: number): Texture {
   return pickByString(`${x}${y}`, junkTextures)
 }
 
-const playerTextures = [
+export function getItemTexture ({ type, position }: Item, showBeer: boolean): Texture {
+  if (type === 'WEAPON') {
+    return textures.weapon
+  }
+
+  if (type === 'POTION') {
+    return showBeer ? textures.beer : textures.potion
+  }
+
+  return getJunkTexture(position.x, position.y)
+}
+
+export const playerTextures: readonly Texture[] = [
   Texture.from(playerOneImage, textureOptions),
   Texture.from(playerTwoImage, textureOptions),
   Texture.from(playerThreeImage, textureOptions),

@@ -9,14 +9,6 @@
 
 Bots of Black Friday is a game for code camp events. This repo contains the server code and instructions/templates for bot implementation. The idea is that "a moderator" runs the server in a LAN or Azure. The players (software developers) implement bots that talk to the server.
 
-## Image asset sources
-
-The frontend sprite images are derived from:
-
-* [Ninja adventure asset pack by Pixel-Boy](https://pixel-boy.itch.io/ninja-adventure-asset-pack)
-* [Pixel food by Alifdoll](https://alifdoll.itch.io/pixel-food-asset)
-* [26 Animated PixelArt Robots by Mounir Tohami](https://mounirtohami.itch.io/26-animated-pixelart-robots)
-
 ## Rules of the game
 
 * Bots act as clients. The clients have time until the next tick to register their next move to the server. 
@@ -153,3 +145,11 @@ To create a development build:
 - Build the server: `./mvnw clean package -pl server -P production`
 - Run the server: `java -jar server/target/server-1.0-SNAPSHOT.jar`
 - The server should be available at http://localhost:8080/
+
+## Image asset sources
+
+The frontend sprite images are derived from:
+
+* [Ninja adventure asset pack by Pixel-Boy](https://pixel-boy.itch.io/ninja-adventure-asset-pack)
+* [Pixel food by Alifdoll](https://alifdoll.itch.io/pixel-food-asset)
+* [26 Animated PixelArt Robots by Mounir Tohami](https://mounirtohami.itch.io/26-animated-pixelart-robots)

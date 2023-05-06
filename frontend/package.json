@@ -21,11 +21,13 @@
     "@pixi/react-animated": "^7.1.0",
     "@stomp/stompjs": "^7.0.0",
     "lodash": "^4.17.21",
+    "pixi-filters": "^5.2.1",
     "pixi.js": "^7.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-resize-detector": "^9.1.0",
-    "react-spring": "^9.7.1"
+    "react-spring": "^9.7.1",
+    "yy-fps": "^2.0.1"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.194",
@@ -44,6 +46,7 @@
     "tailwindcss": "^3.2.6",
     "typescript": "^4.9.5",
     "vite": "^4.1.0",
-    "vite-plugin-fonts": "^0.7.0"
+    "vite-plugin-fonts": "^0.7.0",
+    "vite-plugin-glsl": "^1.1.2"
   }
 }

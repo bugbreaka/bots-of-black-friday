@@ -4,6 +4,7 @@ import { type Texture } from 'pixi.js'
 import { type GameMap } from '@src/types/GameMap'
 import { type MapDimensions } from '@src/utils/MapDimensions'
 import { textures } from '@src/utils/textures'
+import { toPixelPosition } from '@src/utils/toPixelPosition'
 
 enum TileType {
   WALL = 'x',
@@ -16,17 +17,19 @@ export function MapStaticContent ({
   gameMap: {
     tiles
   },
-  dimensions: {
-    tileWidth,
-    stageWidth,
-    stageHeight
+  mapDimensions: {
+    tileWidthInPx,
+    halfTileWidthInPx,
+    stageWidthInPx,
+    stageHeightInPx
   }
 }: {
-  gameMap: GameMap
-  dimensions: MapDimensions
+  gameMap: Pick<GameMap, 'tiles'>
+  mapDimensions: MapDimensions
 }): JSX.Element {
   // Note! Floor texture is 1024 px times 1024 px and contains 12 tiles
-  const floorTileScale = (tileWidth / (textures.floor.width / 12))
+  // Note! textures.floor.width returns sometimes 1, replaced with a static value.
+  const floorTileScale = (tileWidthInPx / (1024 / 12))
 
   const mapStaticSprites = tiles.map((row, rowIndex): JSX.Element[] => {
     const rowSprites = [...row]
@@ -44,16 +47,25 @@ export function MapStaticContent ({
           console.error(`Unknown tile type (${tileType}) at (${rowIndex}, ${colIndex}).`)
           return null
         }
-        const x = colIndex * tileWidth
-        const y = rowIndex * tileWidth
+
+        const { xInPx, yInPx } = toPixelPosition(
+          { x: colIndex, y: rowIndex },
+          tileWidthInPx,
+          halfTileWidthInPx
+        )
+
+        // Alternative mine color: 0xF4AFC0
+        const tint = tileType === TileType.MINE ? 0xFF6368 : 0xFFFFFF
 
         return <Sprite
-          key={`wall-${rowIndex}-${colIndex}`}
-          x={x}
-          y={y}
-          width={tileWidth}
-          height={tileWidth}
+          key={`static-${tileType}-${rowIndex}-${colIndex}`}
+          anchor={[0.5, 0.5]}
+          x={xInPx}
+          y={yInPx}
+          width={tileWidthInPx}
+          height={tileWidthInPx}
           texture={texture}
+          tint={tint}
         />
       }).filter((sprite): sprite is JSX.Element => sprite !== null)
 
@@ -65,8 +77,8 @@ export function MapStaticContent ({
       <TilingSprite
         key="map-floor"
         texture={textures.floor}
-        width={stageWidth}
-        height={stageHeight}
+        width={stageWidthInPx}
+        height={stageHeightInPx}
         tileScale={[floorTileScale, floorTileScale]}
         tilePosition={{ x: 0, y: 0 }}
       />

@@ -1,37 +1,35 @@
-import { type Result } from '@src/utils/Result'
-import { type GameMap } from '@src/types/GameMap'
-
 export interface MapDimensions {
   width: number
   height: number
-  containerWidth: number
-  tileWidth: number
-  halfTileWidth: number
-  stageWidth: number
-  stageHeight: number
+  containerWidthInPx: number
+  tileWidthInPx: number
+  halfTileWidthInPx: number
+  stageWidthInPx: number
+  stageHeightInPx: number
 }
 
 export function calculateMapDimensions (
-  gameMap: Result<GameMap>,
-  containerWidth: number | undefined
+  width: number | undefined,
+  height: number | undefined,
+  containerWidthInPx: number | undefined
 ): MapDimensions | undefined {
-  if (!gameMap.ok) {
+  if (width === undefined || height === undefined) {
     return
   }
 
-  if (containerWidth === undefined) {
+  if (containerWidthInPx === undefined) {
     return
   }
 
-  const tileWidth = Math.floor(containerWidth / gameMap.value.width)
+  const tileWidthInPx = Math.floor(containerWidthInPx / width)
 
   return {
-    width: gameMap.value.width,
-    height: gameMap.value.height,
-    containerWidth,
-    tileWidth,
-    halfTileWidth: Math.round(tileWidth / 2),
-    stageWidth: gameMap.value.width * tileWidth,
-    stageHeight: gameMap.value.height * tileWidth
+    width,
+    height,
+    containerWidthInPx,
+    tileWidthInPx,
+    halfTileWidthInPx: Math.round(tileWidthInPx / 2),
+    stageWidthInPx: width * tileWidthInPx,
+    stageHeightInPx: height * tileWidthInPx
   }
 }

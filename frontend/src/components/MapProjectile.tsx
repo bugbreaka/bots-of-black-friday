@@ -5,6 +5,7 @@ import { textures } from '@src/utils/textures'
 import { type PixelPosition, toPixelPosition } from '@src/utils/toPixelPosition'
 import { type Position } from '@src/types/Position'
 import { zIndex } from '@src/utils/zIndex'
+import { type MapDimensions } from '@src/utils/MapDimensions'
 
 /**
  * Sprite must be oriented originally upwards.
@@ -33,18 +34,21 @@ function rotateSpriteToTarget (
 interface ProjectileProperties {
   fromPosition: Position
   toPosition: Position
-  tileWidth: number
-  halfTileWidth: number
+  mapDimensions: MapDimensions
+  animate: boolean
 }
 
-export const Projectile: React.FunctionComponent<ProjectileProperties> = function ({
+export const MapProjectile: React.FunctionComponent<ProjectileProperties> = function ({
   fromPosition,
   toPosition,
-  tileWidth,
-  halfTileWidth
+  mapDimensions: {
+    tileWidthInPx,
+    halfTileWidthInPx
+  },
+  animate
 }) {
-  const from = toPixelPosition(fromPosition, tileWidth, halfTileWidth)
-  const to = toPixelPosition(toPosition, tileWidth, halfTileWidth)
+  const from = toPixelPosition(fromPosition, tileWidthInPx, halfTileWidthInPx)
+  const to = toPixelPosition(toPosition, tileWidthInPx, halfTileWidthInPx)
   const [rotation] = useState(rotateSpriteToTarget(from, to))
 
   const props = useSpring({
@@ -58,10 +62,10 @@ export const Projectile: React.FunctionComponent<ProjectileProperties> = functio
   return (<AnimatedSprite
     texture={textures.energyBall}
     anchor={[0.5, 0.5]}
-    width={tileWidth}
-    height={tileWidth}
+    width={tileWidthInPx}
+    height={tileWidthInPx}
     rotation={rotation}
     zIndex={zIndex.projectile}
-    {...props}
+    {...(animate ? props : { x: from.xInPx, y: from.yInPx })}
   />)
 }

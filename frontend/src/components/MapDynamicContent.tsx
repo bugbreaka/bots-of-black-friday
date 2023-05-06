@@ -4,19 +4,14 @@ import { isNull } from 'lodash'
 import { type GameState } from '@src/types/GameState'
 import { type Item } from '@src/types/Item'
 import { type MapDimensions } from '@src/utils/MapDimensions'
-import { getPlayerTexture } from '@src/utils/textures'
+import { getItemTexture, getPlayerTexture } from '@src/utils/textures'
 import { toPixelPosition } from '@src/utils/toPixelPosition'
 import { zIndex } from '@src/utils/zIndex'
-import { Projectile } from '@src/components/Projectile'
+import { MapProjectile } from '@src/components/MapProjectile'
 import { MapItem } from '@src/components/MapItem'
 import { getPlayerTint, MapPlayer } from '@src/components/MapPlayer'
-import { Label } from '@src/components/Label'
+import { MapLabel } from '@src/components/MapLabel'
 import { labelFilters } from '@src/utils/labelFilters'
-
-/*
-TODO
-  - yksikkötestit canvaksille
-*/
 
 function getItemLabelText ({ type, price, discountPercent }: Item): string | null {
   if (type === 'JUST_SOME_JUNK') {
@@ -36,25 +31,23 @@ export function MapDynamicContent ({
     players,
     shootingLines
   },
-  dimensions: {
-    tileWidth,
-    halfTileWidth
-  },
+  mapDimensions,
   showBeer,
   showItemLabels
 }: {
   gameState: GameState
-  dimensions: MapDimensions
+  mapDimensions: MapDimensions
   showBeer: boolean
   showItemLabels: boolean
 }): JSX.Element {
   const itemSprites = items.map((item) => {
+    const texture = getItemTexture(item, showBeer)
+
     return <MapItem
       key={`item-${item.type}-${item.position.x}-${item.position.y}`}
       item={item}
-      tileWidth={tileWidth}
-      halfTileWidth={halfTileWidth}
-      showBeer={showBeer}
+      mapDimensions={mapDimensions}
+      texture={texture}
     />
   })
 
@@ -62,12 +55,16 @@ export function MapDynamicContent ({
     .map((item) => ([item, getItemLabelText(item)]))
     .filter((pair): pair is [Item, string] => !isNull(pair[1]))
     .map(([item, labelText]) => {
-      const itemPosition = toPixelPosition(item.position, tileWidth, halfTileWidth)
+      const itemPosition = toPixelPosition(
+        item.position,
+        mapDimensions.tileWidthInPx,
+        mapDimensions.halfTileWidthInPx
+      )
 
-      return <Label
+      return <MapLabel
         key={`item-${item.type}-${item.position.x}-${item.position.y}-label`}
         text={labelText}
-        halfTileWidth={halfTileWidth}
+        mapDimensions={mapDimensions}
         itemPosition={itemPosition}
         filters={labelFilters.item}
         zIndex={zIndex.itemLabel}
@@ -78,22 +75,26 @@ export function MapDynamicContent ({
     return <MapPlayer
       key={`player-${player.name}`}
       player={player}
-      tileWidth={tileWidth}
-      halfTileWidth={halfTileWidth}
+      mapDimensions={mapDimensions}
       texture={getPlayerTexture(player.name)}
       tint={getPlayerTint(player.name)}
+      hasWeapon={false}
     />
   })
 
   const playerLabelSprites = players.map(({ name, position, timeInState }) => {
-    const playerPosition = toPixelPosition(position, tileWidth, halfTileWidth)
+    const playerPosition = toPixelPosition(
+      position,
+      mapDimensions.tileWidthInPx,
+      mapDimensions.halfTileWidthInPx
+    )
 
     const label = timeInState > 0 ? `${name}\n(${timeInState})` : name
 
-    return <Label
+    return <MapLabel
       key={`player-${name}-label`}
       text={label}
-      halfTileWidth={halfTileWidth}
+      mapDimensions={mapDimensions}
       itemPosition={playerPosition}
       filters={labelFilters.player}
       zIndex={zIndex.playerLabel}
@@ -103,12 +104,12 @@ export function MapDynamicContent ({
   const projectiles = shootingLines
     .filter(({ age }) => age < 2)
     .map(({ fromPosition, toPosition }) => {
-      return <Projectile
+      return <MapProjectile
         key={`projectile-${fromPosition.x}-${fromPosition.y}-to-${toPosition.x}-${toPosition.y}`}
         fromPosition={fromPosition}
         toPosition={toPosition}
-        tileWidth={tileWidth}
-        halfTileWidth={halfTileWidth}
+        mapDimensions={mapDimensions}
+        animate={true}
       />
     })
 

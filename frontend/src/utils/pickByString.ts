@@ -9,7 +9,7 @@ export function toHashCode (str: string): number {
   return hash
 }
 
-export function pickByString<T> (str: string, arr: T[]): T {
+export function pickByString<T> (str: string, arr: readonly T[]): T {
   const hash = toHashCode(str)
   const mod = hash % arr.length
 

@@ -1,4 +1,5 @@
 import React from 'react'
+import { truncate } from 'lodash'
 
 export default function Chat ({ messages }: { messages: string[] }): JSX.Element {
   return (
@@ -15,9 +16,9 @@ export default function Chat ({ messages }: { messages: string[] }): JSX.Element
           </td>
         </tr>}
         {messages.map((message, index) => {
-          return <tr key={`message-${index}`} className="border-b border-zinc-50 border-dashed odd:bg-zinc-600">
-            <td className={index === 0 ? 'w-full pb-2' : 'w-full py-2'}>
-              {message}
+          return <tr key={`message-${index}`} className="border-b border-zinc-50 border-solid odd:bg-zinc-600">
+            <td className={index === 0 ? 'w-full p-3 pl-0' : 'w-full p-3 pl-0'}>
+              {truncate(message, { length: 96 })}
             </td>
           </tr>
         })}

@@ -3,6 +3,7 @@ import { Container, NineSlicePlane, Text } from '@pixi/react'
 import { type Filter, TextMetrics, TextStyle } from 'pixi.js'
 import { textures } from '@src/utils/textures'
 import { type PixelPosition } from '@src/utils/toPixelPosition'
+import { type MapDimensions } from '@src/utils/MapDimensions'
 
 const labelTextStyle = new TextStyle({
   align: 'center',
@@ -13,15 +14,17 @@ const labelTextStyle = new TextStyle({
   fill: '#000000'
 })
 
-export function Label ({
+export function MapLabel ({
   text,
-  halfTileWidth,
+  mapDimensions: {
+    halfTileWidthInPx
+  },
   itemPosition,
   zIndex,
   filters
 }: {
   text: string
-  halfTileWidth: number
+  mapDimensions: MapDimensions
   itemPosition: PixelPosition
   zIndex: number
   filters: Filter[]
@@ -33,7 +36,7 @@ export function Label ({
   const labelWidth = labelMetrics.maxLineWidth + labelPadding + labelPadding
   const labelHeight = labelMetrics.height + labelPadding + labelPadding
   const labelX = itemPosition.xInPx - Math.round(labelWidth * 0.5)
-  const labelY = itemPosition.yInPx - labelHeight - Math.round(halfTileWidth * 1.3)
+  const labelY = itemPosition.yInPx - labelHeight - Math.round(halfTileWidthInPx * 1.3)
 
   const labelContentX = labelPadding
   const labelContentY = labelPadding

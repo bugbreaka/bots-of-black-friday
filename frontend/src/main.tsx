@@ -45,7 +45,11 @@ function MapContainer ({
 }): JSX.Element {
   const { width: containerWidth, ref } = useResizeDetector()
 
-  const dimensions = calculateMapDimensions(gameMap, containerWidth)
+  const mapDimensions = calculateMapDimensions(
+    gameMap.ok ? gameMap.value.width : undefined,
+    gameMap.ok ? gameMap.value.height : undefined,
+    containerWidth
+  )
 
   return <div ref={ref}>
     {!gameMap.ok && <ErrorMessage
@@ -54,18 +58,18 @@ function MapContainer ({
     {!gameState.ok && <ErrorMessage
       message={`Game state error: ${JSON.stringify(gameState.error, null, '  ')}`}
     />}
-    {dimensions !== undefined && gameMap.ok && gameState.ok &&
+    {mapDimensions !== undefined && gameMap.ok && gameState.ok &&
       <Stage
         className="mx-auto"
-        width={dimensions.stageWidth}
-        height={dimensions.stageHeight}
+        width={mapDimensions.stageWidthInPx}
+        height={mapDimensions.stageHeightInPx}
         options={{ antialias: false, backgroundColor: 0xeef1f5 }}
       >
-        <MapStaticContent gameMap={gameMap.value} dimensions={dimensions} />
-        {showMapGrid && <MapGrid dimensions={dimensions} />}
+        <MapStaticContent gameMap={gameMap.value} mapDimensions={mapDimensions} />
+        {showMapGrid && <MapGrid mapDimensions={mapDimensions} />}
         <MapDynamicContent
           gameState={gameState.value}
-          dimensions={dimensions}
+          mapDimensions={mapDimensions}
           showBeer={showBeer}
           showItemLabels={showItemLabels}
         />
@@ -83,6 +87,8 @@ class App extends React.Component<unknown, {
   showItemLabels: boolean
   showMapGrid: boolean
 }> {
+  private readonly chatTopic = '/topic/chat'
+  private readonly eventTopic = '/topic/events'
   private readonly maxMessages = 10
   private stompClient: Client | undefined
 
@@ -161,13 +167,18 @@ class App extends React.Component<unknown, {
     })
 
     stompClient.onConnect = () => {
-      stompClient.subscribe('/topic/chat', (message: Message) => {
+      stompClient.subscribe(this.chatTopic, (message: Message) => {
         this.handleChatEvent(message)
       })
 
-      stompClient.subscribe('/topic/events', (message: Message) => {
+      stompClient.subscribe(this.eventTopic, (message: Message) => {
         this.handleGameEvent(message)
       })
+    }
+
+    stompClient.onDisconnect = () => {
+      stompClient.unsubscribe(this.chatTopic)
+      stompClient.unsubscribe(this.eventTopic)
     }
 
     stompClient.onWebSocketError = (event: any) => {
@@ -199,8 +210,8 @@ class App extends React.Component<unknown, {
         ...state,
         chatMessages: [
           newMessage,
-          ...state.chatMessages.slice(0, this.maxMessages - 1)
-        ]
+          ...state.chatMessages
+        ].slice(0, this.maxMessages)
       }))
     } catch (err) {
       this.setState((state) => ({
@@ -244,7 +255,13 @@ class App extends React.Component<unknown, {
   }
 
   async componentWillUnmount (): Promise<void> {
-    await this.stompClient?.deactivate()
+    const clientToBeDestroyed = this.stompClient
+    this.stompClient = undefined
+
+    if (clientToBeDestroyed !== undefined) {
+      await clientToBeDestroyed.deactivate()
+      clientToBeDestroyed.forceDisconnect()
+    }
   }
 
   render (): JSX.Element {

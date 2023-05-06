@@ -5,9 +5,13 @@ export interface PixelPosition {
   yInPx: number
 }
 
-export function toPixelPosition ({ x, y }: Position, tileWidth: number, halfTileWidth: number): PixelPosition {
+export function toPixelPosition (
+  { x, y }: Position,
+  tileWidthInPx: number,
+  halfTileWidthInPx: number
+): PixelPosition {
   return {
-    xInPx: (x * tileWidth) + halfTileWidth,
-    yInPx: (y * tileWidth) + halfTileWidth
+    xInPx: (x * tileWidthInPx) + halfTileWidthInPx,
+    yInPx: (y * tileWidthInPx) + halfTileWidthInPx
   }
 }
