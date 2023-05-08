@@ -7,11 +7,11 @@ import { type MapDimensions } from '@src/utils/MapDimensions'
 import { getItemTexture, getPlayerTexture } from '@src/utils/textures'
 import { toPixelPosition } from '@src/utils/toPixelPosition'
 import { zIndex } from '@src/utils/zIndex'
-import { MapProjectile } from '@src/components/MapProjectile'
 import { MapItem } from '@src/components/MapItem'
 import { getPlayerTint, MapPlayer } from '@src/components/MapPlayer'
-import { MapLabel } from '@src/components/MapLabel'
 import { labelFilters } from '@src/utils/labelFilters'
+import { MapProjectile } from '@src/components/MapProjectile'
+import { MapLabel } from '@src/components/MapLabel'
 
 function getItemLabelText ({ type, price, discountPercent }: Item): string | null {
   if (type === 'JUST_SOME_JUNK') {

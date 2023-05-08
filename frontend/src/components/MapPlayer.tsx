@@ -5,8 +5,8 @@ import { pickByString } from '@src/utils/pickByString'
 import { toPixelPosition } from '@src/utils/toPixelPosition'
 import { zIndex } from '@src/utils/zIndex'
 import { type Player } from '@src/types/Player'
-import { PlayerGlowFilter } from '@src/utils/PlayerGlowFilter'
 import { type MapDimensions } from '@src/utils/MapDimensions'
+import { PlayerGlowFilter } from '@src/utils/PlayerGlowFilter'
 
 // https://www.pixilart.com/palettes/tropical-1333
 export const playerTints: readonly number[] = [
