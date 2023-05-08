@@ -17,7 +17,7 @@ export default defineConfig({
   build: {
     outDir: '../../server/src/main/resources/static',
     emptyOutDir: true,
-    manifest: true,
+    manifest: false,
     rollupOptions: {
       input: {
         main: resolve(srcDir, 'index.html')
