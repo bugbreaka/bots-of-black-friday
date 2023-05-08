@@ -160,6 +160,9 @@ class App extends React.Component<unknown, {
       gameMap: isGameMap(gameMap) ? valueResult(gameMap) : errorResult(gameMap)
     }))
 
+    // Note! Using React.StrictMode causes App to mount twice in development mode.
+    //       The async componentDidMount and componentWillUnmount are interleaved, and not handled
+    //       correctly, this causes stomp events being handled twice - fix could be a cancellable promise.
     const stompClient = new Client({
       brokerURL: import.meta.env.VITE_WEBSOCKET_ENDPOINT,
       connectionTimeout: 10_000,
