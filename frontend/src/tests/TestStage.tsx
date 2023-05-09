@@ -59,8 +59,9 @@ export function getCellY (thunk: () => number): number {
 function TestStageReady (): JSX.Element {
   const app = useApp()
   app.renderer.on('postrender', () => {
-    const el = document.getElementById('test-stage-ready') as HTMLElement
-    if (el.style.display !== 'block') {
+    const el = document.getElementById('test-stage-ready')
+    if (el !== null && el.style.display !== 'block') {
+      el.textContent = 'TEST RENDERED'
       el.style.display = 'block'
     }
   })
@@ -114,9 +115,11 @@ export const TestContainer: React.FC<React.PropsWithChildren> = function ({
 }) {
   return <div id="container" className="container mx-auto">
     {children}
-    <div id="test-stage-ready" className="w-fit mx-auto p-2 bg-green-500 text-center text-zinc-900 hidden">
-      TEST RENDERED
-    </div>
+    <div
+      id="test-stage-ready"
+      data-testid="test-stage-ready"
+      className="w-fit mx-auto p-2 bg-green-500 text-center text-zinc-900 hidden"
+    ></div>
   </div>
 }
 

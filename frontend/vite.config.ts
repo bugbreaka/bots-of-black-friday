@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { VitePluginFonts } from 'vite-plugin-fonts'
 import glsl from 'vite-plugin-glsl'
 import { resolve } from 'path'
 
@@ -31,11 +30,6 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    glsl(),
-    VitePluginFonts({
-      google: {
-        families: ['Press Start 2P']
-      }
-    })
+    glsl()
   ]
 })

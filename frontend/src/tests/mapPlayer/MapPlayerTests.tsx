@@ -1,5 +1,4 @@
 import React from 'react'
-import '@src/index.css'
 import { MapPlayer, playerTints } from '@src/components/MapPlayer'
 import { playerTextures } from '@src/utils/textures'
 import { type Player } from '@src/types/Player'

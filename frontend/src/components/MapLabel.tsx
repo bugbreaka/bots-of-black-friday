@@ -5,15 +5,6 @@ import { textures } from '@src/utils/textures'
 import { type PixelPosition } from '@src/utils/toPixelPosition'
 import { type MapDimensions } from '@src/utils/MapDimensions'
 
-const labelTextStyle = new TextStyle({
-  align: 'center',
-  fontFamily: '"Press Start 2P", cursive',
-  fontSize: 8,
-  letterSpacing: 1.4,
-  lineHeight: 10,
-  fill: '#000000'
-})
-
 export function MapLabel ({
   text,
   mapDimensions: {
@@ -29,6 +20,14 @@ export function MapLabel ({
   zIndex: number
   filters: Filter[]
 }): JSX.Element {
+  const labelTextStyle = new TextStyle({
+    align: 'center',
+    fontFamily: '"Press Start 2P", cursive',
+    fontSize: 8,
+    letterSpacing: 1.4,
+    lineHeight: 10,
+    fill: '#000000'
+  })
   const labelMetrics = TextMetrics.measureText(text, labelTextStyle)
 
   const labelPadding = 8

@@ -1,5 +1,4 @@
 import React from 'react'
-import '@src/index.css'
 import { mapDimensions, renderTest, stageDimensions } from '@src/tests/TestStage'
 import { MapStaticContent } from '@src/components/MapStaticContent'
 import { MapGrid } from '@src/components/MapGrid'

@@ -1,5 +1,4 @@
 import React from 'react'
-import '@src/index.css'
 import { FilledTile, mapDimensions, renderTest, stageDimensions } from '@src/tests/TestStage'
 import { type Position } from '@src/types/Position'
 import { MapProjectile } from '@src/components/MapProjectile'

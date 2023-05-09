@@ -1,5 +1,4 @@
 import React from 'react'
-import '@src/index.css'
 import { MapLabel } from '@src/components/MapLabel'
 import { toPixelPosition } from '@src/utils/toPixelPosition'
 import { FilledTile, mapDimensions, renderTest, stageDimensions } from '@src/tests/TestStage'

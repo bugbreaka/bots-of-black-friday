@@ -7,7 +7,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        bots: ['"Press Start 2P"', 'cursive']
+        bots: ['\'Press Start 2P\'', 'cursive']
       }
     }
   },
